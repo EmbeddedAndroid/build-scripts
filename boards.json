@@ -187,10 +187,6 @@
 	"console": "odroid-xu3",
 	"LPAE": true,
 	"dtb": "exynos5422-odroidxu3",
-	"rootfs": [
-	    "mmc",
-	    "ramdisk"
-	],
         "defconfig": [
             "exynos_defconfig", 
             "multi_v7_defconfig"
@@ -262,6 +258,15 @@
     "qcom-apq8064-ifc6410": {
 	"mach": "qcom",
 	"console": "ifc6410",
+        "defconfig": [
+            "multi_v7_defconfig", 
+            "qcom_defconfig"
+        ]
+    }, 
+
+    "qcom-apq8084-ifc6540": {
+	"mach": "qcom",
+	"console": "ifc6540",
         "defconfig": [
             "multi_v7_defconfig", 
             "qcom_defconfig"
@@ -467,6 +472,15 @@
 	]
     },
 
+    "hi6220-hikey": {
+	"arch": "arm64",
+	"mach": "hisilicon",
+	"console": "hikey",
+	"defconfig": [
+	    "defconfig"
+	]
+    },
+
     "qemu-aarch64": {
 	"arch": "arm64",
 	"mach": "qemu",
@@ -476,5 +490,6 @@
 	    "defconfig+CONFIG_OF_UNITTEST=y"
 	]
     }
+
 }
 
