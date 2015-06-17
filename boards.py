@@ -133,7 +133,9 @@ for board in boards.keys():
                 b["defconfig"].append(defconfig + "+" + "CONFIG_CPU_BIG_ENDIAN=y")
         if "multi_v7_defconfig" in defconfig_list:
             b["defconfig"].append("multi_v7_defconfig+CONFIG_PROVE_LOCKING=y")
-#            b["defconfig"].append("multi_v7_defconfig+tiny")
+            b["defconfig"].append("multi_v7_defconfig+CONFIG_THUMB2_KERNEL=y")
+            b["defconfig"].append("multi_v7_defconfig+preempt-rt")
+            b["defconfig"].append("multi_v7_defconfig+android-base+android-recommended")
 
     if not b.has_key("rootfs"):
         b["rootfs"] = ["ramdisk", ]
@@ -196,22 +198,23 @@ for board in boards.keys():
                     else:
                         dtb_path = "-"
 
-                    # check blacklist
-                    for key in blacklist.keys():
-                        if d.startswith(key):
-                            if dtb and (dtb in blacklist[key]):
-                                blacklisted = True
-                            elif board in blacklist[key]:
-                                blacklisted = True
-                    if blacklisted:
-                        print "\tSkipping %s/%s.  Blacklisted." %(dtb, d)
-                        continue
-                        
                     if dtb == None:  # Legacy
                         logname = "%s,legacy" %board                        
                     else:
                         logname = board
 
+                    # check blacklist
+                    for key in blacklist.keys():
+                        if d.startswith(key):
+                            print "Check blacklist for", key, dtb, logname
+                            if dtb and (dtb in blacklist[key]):
+                                blacklisted = True
+                            elif logname in blacklist[key]:
+                                blacklisted = True
+                    if blacklisted:
+                        print "\tSkipping %s/%s.  Blacklisted." %(logname, d)
+                        continue
+                        
                     # Hack: to distinguish between rootfs types, append to board "name"
                     if rootfs != "ramdisk":
                         logname += "_rootfs:%s" %rootfs
