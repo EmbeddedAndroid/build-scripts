@@ -215,8 +215,9 @@ elif fastboot_cmd == "abootimg":
     subprocess.call(abootimg_cmd, shell=True)
 
     if board.startswith("ifc6540"):
-        subprocess.call("scp %s root@beaglebone:/tmp/" %bootimg, shell=True)
-        subprocess.call("ssh root@beaglebone fastboot boot %s" %bootimg, shell=True)
+        remote_bootimg = os.path.join("/tmp", os.path.basename(bootimg))
+        subprocess.call("scp %s root@beaglebone:/%s" % (bootimg, remote_bootimg), shell=True)
+        subprocess.call("ssh root@beaglebone fastboot boot %s" %remote_bootimg, shell=True)
 
     else:
         # Boot the image
