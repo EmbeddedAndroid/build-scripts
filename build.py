@@ -17,6 +17,7 @@ import stat
 import json
 import platform
 import time
+import urllib2
 import requests
 import ConfigParser
 from urlparse import urljoin
@@ -90,6 +91,7 @@ kconfig_tmpfile_fd = None
 kconfig_frag = None
 frag_names = []
 install = False
+tc_tmp_dir = None
 publish = False
 url = None
 token = None
@@ -105,7 +107,7 @@ else:
     os.environ['ARCH'] = arch
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "c:ip:s")
+    opts, args = getopt.getopt(sys.argv[1:], "c:ip:st")
 
 except getopt.GetoptError as err:
     print str(err) # will print something like "option -a not recognized"
@@ -148,6 +150,40 @@ for o, a in opts:
             print "ERROR: unable to load configuration file"
     if o == '-s':
         silent = not silent
+    if o == '-t':
+        # Fetch specified toolchain
+        print "Fetching toolchain from %s" % a
+        tc_tmp_dir = tempfile.mkdtemp()
+        try:
+            tc_url = a
+            tc_tarball = tc_url.split('/')[-1]
+            tc_object = urllib2.urlopen(a)
+        except ValueError:
+            print "ERROR: invalid url"
+            sys.exit(1)
+        if tc_object.code != 200:
+            print "ERROR: unable to fetch toolchain from %s" % tc_url
+            sys.exit(1)
+        tc_tarball_path = os.path.join(tc_tmp_dir, tc_tarball)
+        # Download toolchain tarball to the temp directory
+        with open(tc_tarball_path, 'wb') as f:
+            f.write(tc_object.read())
+        # Unpack the tarball
+        output = \
+            subprocess.check_output('tar --strip-components=1 -C %s -xaf %s'
+                                    % (tc_tmp_dir, tc_tarball_path),
+                                    shell=True)
+        tc_binary_path = os.path.join(tc_tmp_dir, 'bin/')
+        # Identify the toolchain architecture and prefix
+        for root, dirs, filenames in os.walk(tc_binary_path):
+            for f in filenames:
+                # For now lets check for GCC
+                if f.endswith('-gcc'):
+                    arch = f.split('-')[:1][0]
+                    if arch == 'aarch64':
+                        arch = 'arm64'
+                    cross_compilers[arch] = f.replace('gcc', '')
+                    os.environ['PATH'] += os.pathsep + tc_binary_path
 
 # Default umask for file creation
 os.umask(022)
@@ -476,6 +512,9 @@ if install:
 #
 if kconfig_tmpfile:
     os.unlink(kconfig_tmpfile)
+
+if tc_tmp_dir:
+    shutil.rmtree(tc_tmp_dir)
 
 if result:
     subprocess.call("cat %s" %build_log, shell=True)
