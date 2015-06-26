@@ -240,6 +240,8 @@ elif fastboot_cmd == 'nolo':
         cmd += '"%s" ' %cmdline
     print cmd
     subprocess.call(cmd, shell=True)
+
+elif fastboot_cmd == "sony":
     dtb_tmpdir = tempfile.mkdtemp(dir=tempdir)
     fd, dtb_qcom = tempfile.mkstemp(dir=dtb_tmpdir, prefix="qcom-", suffix=".dtb")
 
