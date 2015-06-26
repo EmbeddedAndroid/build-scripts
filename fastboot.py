@@ -2,6 +2,9 @@
 #
 # fastboot helper for conmux (also support Nokia OMAP Loader a.k.a NOLO)
 #
+# TODO:
+# - check if "sony" method can be combined with "mkbootimg_qc" using patched skales/dtbTool
+#
 import os
 import sys
 import tempfile
@@ -9,6 +12,7 @@ import tftpy
 import subprocess
 import time
 import getopt
+import shutil
 
 tftp_server = '192.168.1.3'
 
@@ -29,6 +33,8 @@ except getopt.GetoptError as err:
 for o, a in opts:
     if o == "-t":
         tftp_server = a
+
+tempdir = tempfile.mkdtemp(prefix="fastboot.py-")
 
 #args = sys.argv[2:]
 kernel = args[0]
@@ -56,8 +62,9 @@ boards = {
     'rk3288-evb': (None, "rockchip", None),
     'cm-qs600': ("f0b93ea2", "boot", None),
     'mt8173evb': ("usb:1-3.2.1", "mkbootimg", None),  # product: TB8173EVB, usb:1-3.2.1
-    'mt8135': ("usb:1-3.2.3", "mkbootimg", None), # product: MT8135_EVBP1_V2, usb:1-3.2.3
+    'mt8135': ("usb:1-3.4.7", "mkbootimg", None), # product: MT8135_EVBP1_V2
     'hikey': ("usb:1-3.3.1", "mkbootimg", None),
+    'dragon410c': ("1c580308", "mkbootimg_qc", None),
 }
 
 kernel_l = ''
@@ -65,14 +72,7 @@ dtb_l = ''
 initrd_l = ''
 bootimg = ''
 def cleanup():
-    if os.path.exists(kernel_l):
-        os.unlink(kernel_l)
-    if os.path.exists(dtb_l):
-        os.unlink(dtb_l)
-    if os.path.exists(initrd_l):
-        os.unlink(initrd_l)
-    if os.path.exists(bootimg):
-        os.unlink(bootimg)
+    shutil.rmtree(tempdir)
     sys.exit(0)
 
 id = None
@@ -86,13 +86,13 @@ else:
 
 try:
     client = tftpy.TftpClient(tftp_server, 69)
-
-    fd, kernel_l = tempfile.mkstemp(prefix='kernel-')
+ 
+    fd, kernel_l = tempfile.mkstemp(dir=tempdir, prefix='kernel-')
     print 'TFTP: download kernel (%s) to %s' %(kernel, kernel_l)
     client.download(kernel, kernel_l, timeout=60)
 
     if dtb:
-        fd, dtb_l = tempfile.mkstemp(prefix='dtb-', suffix=".dtb")
+        fd, dtb_l = tempfile.mkstemp(dir=tempdir, prefix='dtb-', suffix=".dtb")
         print 'TFTP: download dtb (%s) to %s' %(dtb, dtb_l)
         client.download(dtb, dtb_l)
 
@@ -107,7 +107,7 @@ try:
             pass
 
     if initrd:
-        fd, initrd_l = tempfile.mkstemp(prefix='initrd-')
+        fd, initrd_l = tempfile.mkstemp(dir=tempdir, prefix='initrd-')
         print 'TFTP: download initrd (%s) to %s' %(initrd, initrd_l)
         client.download(initrd, initrd_l)
 
@@ -122,7 +122,7 @@ if fastboot_cmd == 'boot':
     if board.startswith("ifc6410") or board.startswith("cm-qs"):
         # 8064 trickery
         fastboot_args = "-b 0x82000000"
-        fd, kernel_fixup = tempfile.mkstemp(prefix='kernel-fixup-')
+        fd, kernel_fixup = tempfile.mkstemp(dir=tempdir, prefix='kernel-fixup-')
         cmd = "cat /home/khilman/work.local/platforms/qcom/ifc6410/fixup.bin %s > %s" %(kernel_l, kernel_fixup)
         print "INFO:", cmd
         subprocess.call(cmd, shell=True)
@@ -157,7 +157,7 @@ elif fastboot_cmd == 'flash':
     subprocess.call(cmd, shell=True)
 
 elif fastboot_cmd == "mkbootimg":
-    fd, bootimg = tempfile.mkstemp(prefix="boot.img")
+    fd, bootimg = tempfile.mkstemp(dir=tempdir, prefix="boot.img")
     mkbootimg_cmd = "/home/khilman/bin/mkbootimg --output %s --kernel %s " %(bootimg, kernel_l)
     if initrd_l:
         mkbootimg_cmd += "--ramdisk %s " %initrd_l
@@ -171,8 +171,35 @@ elif fastboot_cmd == "mkbootimg":
     print cmd
     subprocess.call(cmd, shell=True)
     
+elif fastboot_cmd == "mkbootimg_qc":
+    path = os.environ["PATH"]
+    os.environ["PATH"] = "/home/khilman/work/platforms/qcom/skales" + os.pathsep + path
+
+    fd, bootimg = tempfile.mkstemp(dir=tempdir, prefix="boot.img")
+    dt_img = None
+    if dtb_l:
+        fd, dt_img = tempfile.mkstemp(dir=tempdir, prefix="dt.img")
+        dt_cmd = 'dtbTool -o %s -s 2048 -m "206 0 248 0 249 0 250 0 247 0" -b "65560 0" %s' % (dt_img, os.path.dirname(dtb_l))
+        subprocess.call(dt_cmd, shell=True)
+
+    mkbootimg_cmd = "mkbootimg --output %s --kernel %s " %(bootimg, kernel_l)
+    if initrd_l:
+        mkbootimg_cmd += "--ramdisk %s " %initrd_l
+    if dt_img:
+        mkbootimg_cmd += "--dt %s " %dt_img
+    if not cmdline:
+        cmdline = "console=ttyMSM0,115200n8"
+    mkbootimg_cmd += "--cmdline %s " %cmdline
+    mkbootimg_cmd += "--pagesize 2048 --base 0x80000000 "
+    subprocess.call(mkbootimg_cmd, shell=True)
+
+    # Boot the image
+    cmd = "fastboot -s %s boot %s" %(id, bootimg)
+    print cmd
+    subprocess.call(cmd, shell=True)
+    
 elif fastboot_cmd == "abootimg":
-    fd, bootimg = tempfile.mkstemp(prefix="boot.img")
+    fd, bootimg = tempfile.mkstemp(dir=tempdir, prefix="boot.img-")
 
     # fastboot requires DTB appended
     cmd = "cat %s >> %s" %(dtb_l, kernel_l)
@@ -213,14 +240,12 @@ elif fastboot_cmd == 'nolo':
         cmd += '"%s" ' %cmdline
     print cmd
     subprocess.call(cmd, shell=True)
-
-elif fastboot_cmd == "sony":
-    dtb_tmpdir = tempfile.mkdtemp()
+    dtb_tmpdir = tempfile.mkdtemp(dir=tempdir)
     fd, dtb_qcom = tempfile.mkstemp(dir=dtb_tmpdir, prefix="qcom-", suffix=".dtb")
 
     # Insert qcom,msm-id is in the DTS
     print "INFO: Inserting qcom,msm-id into DTB"
-    fd, dts_tmp = tempfile.mkstemp(suffix=".dts")
+    fd, dts_tmp = tempfile.mkstemp(dir=tempdir, suffix=".dts")
     qcom_frag = "/ { qcom,msm-id = <126 8 0>, <185 8 0>, <186 8 0>; };"
     cmd = "dtc -I dtb -O dts -o %s %s" %(dts_tmp, dtb_l)
     subprocess.call(cmd, shell=True)
@@ -229,9 +254,8 @@ elif fastboot_cmd == "sony":
     fp.close()
     cmd = "dtc -I dts -O dtb -o %s %s" %(dtb_qcom, dts_tmp)
     subprocess.call(cmd, shell=True)
-    os.unlink(dts_tmp)
 
-    fd, bootimg = tempfile.mkstemp(prefix="boot.img")
+    fd, bootimg = tempfile.mkstemp(dir=tempdir, prefix="boot.img-")
     mkbootimg_args = "--base 0x00000000 --pagesize 2048 --ramdisk_offset 0x02000000 --tags_offset 0x01e00000 "
     cmd = "/usr/local/bin/mkqcdtbootimg %s --output %s --kernel %s " %(mkbootimg_args, bootimg, kernel_l)
     if initrd_l:
@@ -267,8 +291,6 @@ elif fastboot_cmd == "sony":
     time.sleep(1)
     tty.write("a")
     tty.close()
-
-    shutil.rmtree(dtb_tmpdir)
 
 elif fastboot_cmd == "rockchip":
     os.chdir("/home/khilman/work.local/platforms/rockchip")
