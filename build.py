@@ -183,7 +183,7 @@ for o, a in opts:
                     arch = f.split('-')[:1][0]
                     if arch == 'aarch64':
                         arch = 'arm64'
-                    cross_compilers[arch] = f.replace('gcc', '')
+                    cross_compilers[arch] = os.path.join(tc_binary_path, f.replace('gcc', ''))
                     os.environ['PATH'] += os.pathsep + tc_binary_path
 
 # Default umask for file creation
