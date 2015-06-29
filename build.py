@@ -107,7 +107,7 @@ else:
     os.environ['ARCH'] = arch
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "c:ip:st")
+    opts, args = getopt.getopt(sys.argv[1:], "c:ip:st:")
 
 except getopt.GetoptError as err:
     print str(err) # will print something like "option -a not recognized"
@@ -155,6 +155,7 @@ for o, a in opts:
         print "Fetching toolchain from %s" % a
         tc_tmp_dir = tempfile.mkdtemp()
         try:
+            print a
             tc_url = a
             tc_tarball = tc_url.split('/')[-1]
             tc_object = urllib2.urlopen(a)
