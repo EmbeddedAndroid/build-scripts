@@ -28,15 +28,14 @@ for arch in ${ARCH_LIST}; do
    sudo touch /var/www/images/kernel-ci/$TREE_NAME/$GIT_DESCRIBE/$arch.done
 done
 
-# Tell the dashboard to import the build.
-echo "Build has now finished, reporting result to dashboard."
-curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'"}' api.kernelci.org/job
-
 # Check if all builds for all architectures have finished. The magic number here is 3 (arm, arm64, x86)
 # This magic number will need to be changed if new architectures are added.
 export BUILDS_FINISHED=$(ls /var/www/images/kernel-ci/$TREE_NAME/$GIT_DESCRIBE/ | grep .done | wc -l)
 if [[ BUILDS_FINISHED -eq 3 ]]; then
     echo "All builds have now finished, triggering testing..."
+    # Tell the dashboard the job has finished build.
+    echo "Build has now finished, reporting result to dashboard."
+    curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'"}' api.kernelci.org/job
     if [ "$TREE_NAME" == "next" ] || [ "$TREE_NAME" == "arm-soc" ] || [ "$TREE_NAME" == "mainline" ] || [ "$TREE_NAME" == "stable" ] || [ "$TREE_NAME" == "rmk" ] || [ "$TREE_NAME" == "tegra" ]; then
         # Public Mailing List
         echo "Sending results pubic mailing list"
