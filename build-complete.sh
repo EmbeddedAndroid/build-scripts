@@ -74,6 +74,14 @@ if [[ BUILDS_FINISHED -eq 3 ]]; then
         echo "Sending results to Viresh Kumar"
         curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["viresh.kumar@linaro.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
         curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["viresh.kumar@linaro.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
+    elif [ "$TREE_NAME" == "krzysztof" ]; then
+        echo "Sending results to Krzysztof Kozlowski"
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["k.kozlowski@samsung.com", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["k.kozlowski@samsung.com", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
+    elif [ "$TREE_NAME" == "samsung" ]; then
+        echo "Sending results to Samsung Team"
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["k.kozlowski@samsung.com", "kgene.kim@samsung.com", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["k.kozlowski@samsung.com", "kgene.kim@samsung.com", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
     else
         # Private Mailing List
         echo "Sending results to private mailing list"
