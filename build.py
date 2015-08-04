@@ -471,15 +471,20 @@ if install:
 
     if publish and job:
         artifacts = []
+        headers = {}
+        upload_data = {}
+        build_data = {}
         if "defconfig_full" in bmeta:
             defconfig = defconfig_full
         publish_path = os.path.join(job, git_describe, arch + '-' + defconfig)
-        headers = {
-            'Authorization': token
-        }
-        data = {
-            'path': publish_path
-        }
+        headers['Authorization'] = token
+        upload_data['path'] = publish_path
+        build_data['job'] = job
+        build_data['kernel'] = git_describe
+        build_data['defconfig'] = defconfig
+        build_data['arch'] = arch
+        if "defconfig_full" in bmeta:
+            build_data['defconfig_full'] = defconfig_full
         count = 1
         for root, dirs, files in os.walk(install_path):
             if count == 1:
@@ -494,10 +499,11 @@ if install:
                                   (name,
                                    open(os.path.join(root, file_name), 'rb'))))
                 count += 1
-        url = urljoin(url, '/upload')
+        upload_url = urljoin(url, '/upload')
+        build_url = urljoin(url, '/build')
         retry = True
         while retry:
-            response = requests.post(url, data=data, headers=headers, files=artifacts)
+            response = requests.post(upload_url, data=upload_data, headers=headers, files=artifacts)
             if response.status_code != 200:
                 print "ERROR: failed to publish"
                 print response.content
@@ -506,6 +512,11 @@ if install:
                 print "INFO: published artifacts"
                 for publish_result in json.loads(response.content)["result"]:
                     print "%s/%s" % (publish_path, publish_result['filename'])
+                print "INFO: triggering build"
+                headers['Content-Type'] = 'application/json'
+                response = requests.post(
+                    build_url, data=json.dumps(build_data), headers=headers)
+                print response.status_code
                 retry = False
 
 #
