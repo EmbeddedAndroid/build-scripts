@@ -85,6 +85,22 @@ if [[ BUILDS_FINISHED -eq 3 ]]; then
         echo "Sending results to Andy Gross"
         curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["agross@codeaurora.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
         curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["agross@codeaurora.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
+    elif [ "$TREE_NAME" == "broonie-regmap" ]; then
+        echo "Sending results to Mark Brown"
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
+    elif [ "$TREE_NAME" == "broonie-regulator" ]; then
+        echo "Sending results to Mark Brown"
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
+    elif [ "$TREE_NAME" == "broonie-sound" ]; then
+        echo "Sending results to Mark Brown"
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
+    elif [ "$TREE_NAME" == "broonie-spi" ]; then
+        echo "Sending results to Mark Brown"
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "build_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 10}' api.kernelci.org/send
+        curl -X POST -H "Authorization: 08a92277-7867-4bde-9a3d-a003b4b9cbbe" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "boot_report": 1, "send_to": ["broonie@kernel.org", "fellows@kernelci.org"], "format": ["txt", "html"], "delay": 12600}' api.kernelci.org/send
     else
         # Private Mailing List
         echo "Sending results to private mailing list"
