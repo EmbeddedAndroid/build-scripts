@@ -426,8 +426,6 @@ if install:
 
     if kimage_file:
         bmeta["kernel_image"] = "%s" %os.path.basename(kimage_file)
-        bmeta["kernel_image_size"] = \
-            os.stat(os.path.abspath(kimage_file)).st_size
     else:
         bmeta["kernel_image"] = None
     
@@ -449,8 +447,6 @@ if install:
 
     if modules and modules_tarball:
         bmeta["modules"] = "%s" %modules_tarball
-        bmeta["modules_size"] = \
-            os.stat(os.path.abspath(modules_tarball)).st_size
     else:
         bmeta["modules"] = None
 
