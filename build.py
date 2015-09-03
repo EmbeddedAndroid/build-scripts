@@ -447,6 +447,8 @@ if install:
 
     if modules and modules_tarball:
         bmeta["modules"] = "%s" %modules_tarball
+        bmeta["modules_size"] = \
+            os.stat(os.path.join(install_path, modules_tarball)).st_size
     else:
         bmeta["modules"] = None
 
